@@ -46,8 +46,8 @@ export class UsersService {
     const user = await this.findById(id);
     dto.email ? (user.email = dto.email) : (user.email = user.email);
     dto.idade ? (user.idade = dto.idade) : (user.idade = user.idade);
-    dto.nome ? (user.nome = dto.email) : (user.nome = user.nome);
-    dto.sexo ? (user.sexo = dto.email) : (user.sexo = user.sexo);
+    dto.nome ? (user.nome = dto.nome) : (user.nome = user.nome);
+    dto.sexo ? (user.sexo = dto.sexo) : (user.sexo = user.sexo);
     dto.telefone
       ? (user.telefone = dto.telefone)
       : (user.telefone = user.telefone);
