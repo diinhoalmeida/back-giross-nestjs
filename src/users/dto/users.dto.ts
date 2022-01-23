@@ -3,5 +3,5 @@ export class UsersDto {
   email?: string;
   idade?: number;
   telefone?: string;
-  sexo?: string;
+  gen?: string;
 }

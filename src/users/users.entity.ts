@@ -18,5 +18,5 @@ export class UserEntity {
   telefone: string;
 
   @Column({ type: 'varchar' })
-  sexo: string;
+  gen: string;
 }
