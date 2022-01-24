@@ -38,18 +38,56 @@ export class UsersService {
 
   async create(dto: UsersDto): Promise<any> {
     const userCreate = this.userRepository.create(dto);
+
+    //FIND DUPLICATE ITEMS
+    const theList = this.getAll();
+    const emailExists = (await theList).find(
+      (item) => item.email === dto.email,
+    );
+
+    const phoneExists = (await theList).find(
+      (item) => item.telefone === dto.telefone,
+    );
+
+    if (emailExists) {
+      return { errorMessage: `E-mail já existe no banco de dados.` };
+    }
+
+    if (phoneExists) {
+      return { errorMessage: `Telefone já existe no banco de dados.` };
+    }
+
     await this.userRepository.save(userCreate);
     return { message: ` ${userCreate.email} cadastrado com sucesso` };
   }
 
   async update(id: number, dto: UsersDto): Promise<any> {
+    //FIND DUPLICATE ITEMS
+    const theList = this.getAll();
+
+    const emailExists = (await theList).find(
+      (item) => item.email === dto.email && item.id !== dto.id,
+    );
+
+    const phoneExists = (await theList).find(
+      (item) => item.telefone === dto.telefone && item.id !== dto.id,
+    );
+
+    if (emailExists) {
+      return { errorMessage: `E-mail já existe no banco de dados.` };
+    }
+
+    if (phoneExists) {
+      return { errorMessage: `Telefone já existe no banco de dados.` };
+    }
+
     await this.userRepository.update({ id }, dto);
-    return { message: ` ${dto.email} atualizado com sucesso` };
+    return { message: ` Usuário atualizado com sucesso` };
   }
 
   async delete(id: number): Promise<any> {
     const userDelete = await this.findById(id);
     await this.userRepository.delete({ id });
-    return { message: ` ${userDelete.email} deletado com sucesso` };
+    return { message: ` Usuário ${userDelete.nome} deletado com sucesso` };
   }
 }
