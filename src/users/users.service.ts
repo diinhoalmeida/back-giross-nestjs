@@ -31,17 +31,17 @@ export class UsersService {
   async create(dto: UsersDto): Promise<any> {
     const userCreate = this.userRepository.create(dto);
 
-    //VALIDATE EMAIL TYPE
-    const regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!userCreate.email.match(regexEmail)) {
-      return { errorMessage: `E-mail tem formato inválido.` };
-    }
-
     //VALIDATE ALL TEXTFIELDS
     if (!dto.email || !dto.gen || !dto.idade || !dto.nome || !dto.telefone) {
       return {
         errorBlank: `Você precisa preencher todos os campos para realizar cadastro.`,
       };
+    }
+
+    //VALIDATE EMAIL TYPE
+    const regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!userCreate.email.match(regexEmail)) {
+      return { errorMessage: `E-mail tem formato inválido.` };
     }
 
     //FIND DUPLICATE ITEMS
