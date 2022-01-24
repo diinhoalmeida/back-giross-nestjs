@@ -28,16 +28,15 @@ export class UsersService {
     return userReturn;
   }
 
-  async findByName(nome: string): Promise<UserEntity> {
-    const userReturn = await this.userRepository.findOne({ nome });
-    if (!userReturn) {
-      throw new NotFoundException({ message: 'Este usuário não existe' });
-    }
-    return userReturn;
-  }
-
   async create(dto: UsersDto): Promise<any> {
     const userCreate = this.userRepository.create(dto);
+
+    //VALIDATE ALL TEXTFIELDS
+    if (!dto.email || !dto.gen || !dto.idade || !dto.nome || !dto.telefone) {
+      return {
+        errorBlank: `Você precisa preencher todos os campos para realizar cadastro.`,
+      };
+    }
 
     //FIND DUPLICATE ITEMS
     const theList = this.getAll();
