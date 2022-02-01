@@ -1,9 +1,12 @@
 import { UsersDto } from './dto/users.dto';
-import { UserEntity } from './users.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserEntity } from './entitys/users.entity';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepository } from './users.repository';
-import { listenerCount } from 'process';
+import { UserRepository } from './repository/users.repository';
 
 @Injectable()
 export class UsersService {
@@ -13,92 +16,78 @@ export class UsersService {
   ) {}
 
   async getAll(): Promise<UserEntity[]> {
-    const list = await this.userRepository.find();
-    if (!list.length) {
-      throw new NotFoundException({ message: 'Não foram encontrados itens' });
+    try {
+      const list = await this.userRepository.find();
+      if (!list.length) {
+        throw new NotFoundException({ message: 'Não foram encontrados itens' });
+      }
+      return list;
+    } catch (error) {
+      throw new HttpException(error, 404);  
     }
-    return list;
   }
 
   async findById(id: number): Promise<UserEntity> {
-    const userReturn = await this.userRepository.findOne(id);
-    if (!userReturn) {
-      throw new NotFoundException({ message: 'Este usuário não existe' });
+    try {
+      const userReturn = await this.userRepository.findOne(id);
+      if (!userReturn) {
+        throw new NotFoundException({ message: 'Este usuário não existe' });
+      }
+      return userReturn;
+    } catch (error) {
+      throw new HttpException(error, 404);    
     }
-    return userReturn;
   }
 
   async create(dto: UsersDto): Promise<any> {
-    const userCreate = this.userRepository.create(dto);
-
-    //VALIDATE ALL TEXTFIELDS
-    if (!dto.email || !dto.gen || !dto.idade || !dto.nome || !dto.telefone) {
-      return {
-        errorBlank: `Você precisa preencher todos os campos para realizar cadastro.`,
-      };
+    try {
+      const userCreate = this.userRepository.create(dto);
+      await this.checkDuplicate(dto.email, dto.telefone);
+      await this.userRepository.save(userCreate);
+      
+      return { message: ` ${userCreate.email} cadastrado com sucesso` };
+    } catch (error) {
+      throw new HttpException(error, 500);
     }
-
-    //VALIDATE EMAIL TYPE
-    const regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!userCreate.email.match(regexEmail)) {
-      return { errorMessage: `E-mail tem formato inválido.` };
-    }
-
-    //FIND DUPLICATE ITEMS
-    const theList = this.getAll();
-    const emailExists = (await theList).find(
-      (item) => item.email === dto.email,
-    );
-
-    const phoneExists = (await theList).find(
-      (item) => item.telefone === dto.telefone,
-    );
-
-    if (emailExists) {
-      return { errorMessage: `E-mail já existe no banco de dados.` };
-    }
-
-    if (phoneExists) {
-      return { errorMessage: `Telefone já existe no banco de dados.` };
-    }
-
-    await this.userRepository.save(userCreate);
-    return { message: ` ${userCreate.email} cadastrado com sucesso` };
   }
 
   async update(id: number, dto: UsersDto): Promise<any> {
-    //VALIDATE EMAIL TYPE
-    const regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!dto.email.match(regexEmail)) {
-      return { errorMessage: `E-mail tem formato inválido.` };
+    try {
+      await this.checkDuplicate(dto.email, dto.telefone); 
+      await this.userRepository.update({ id }, dto);
+
+      return { message: ` Usuário atualizado com sucesso` };
+    } catch (error) {
+      throw new HttpException(error, 500);
     }
-
-    //FIND DUPLICATE ITEMS
-    const theList = this.getAll();
-
-    const emailExists = (await theList).find(
-      (item) => item.email === dto.email && item.id !== dto.id,
-    );
-
-    const phoneExists = (await theList).find(
-      (item) => item.telefone === dto.telefone && item.id !== dto.id,
-    );
-
-    if (emailExists) {
-      return { errorMessage: `E-mail já existe no banco de dados.` };
-    }
-
-    if (phoneExists) {
-      return { errorMessage: `Telefone já existe no banco de dados.` };
-    }
-
-    await this.userRepository.update({ id }, dto);
-    return { message: ` Usuário atualizado com sucesso` };
   }
 
   async delete(id: number): Promise<any> {
-    const userDelete = await this.findById(id);
-    await this.userRepository.delete({ id });
-    return { message: ` Usuário ${userDelete.nome} deletado com sucesso` };
+    try {
+      const userDelete = await this.findById(id);
+      await this.userRepository.delete({ id });
+      return { message: ` Usuário ${userDelete.nome} deletado com sucesso` };
+
+    } catch (error) {
+      throw new HttpException(error, 406);
+    }
+  }
+
+  async checkDuplicate(email: string, telefone: string) {
+    const userExists = await this.userRepository.find({
+      where: [
+        { email },
+        { telefone }
+      ]
+    });
+
+    if (userExists.length > 0) {
+      throw new HttpException({
+        status: 409,
+        message: 'Email ou telefone já existem.'
+      }, 409)
+    }
+
+    return;
   }
 }
