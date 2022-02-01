@@ -32,7 +32,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UsersDto) {
+  async update(@Param('id', ParseIntPipe) id: number, @Body(ValidationPipe) dto: UsersDto) {
     return await this.usersService.update(id, dto);
   }
 

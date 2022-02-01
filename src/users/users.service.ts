@@ -42,10 +42,9 @@ export class UsersService {
   async create(dto: UsersDto): Promise<any> {
     try {
       const userCreate = this.userRepository.create(dto);
-      
-
+      await this.checkDuplicate(dto.email, dto.telefone);
       await this.userRepository.save(userCreate);
-
+      
       return { message: ` ${userCreate.email} cadastrado com sucesso` };
     } catch (error) {
       throw new HttpException(error, 500);
