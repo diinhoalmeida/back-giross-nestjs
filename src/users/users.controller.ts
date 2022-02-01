@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  ValidationPipe,
 } from '@nestjs/common';
 
 @Controller('users')
@@ -26,7 +27,7 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() dto: UsersDto) {
+  async create(@Body(ValidationPipe) dto: UsersDto) {
     return await this.usersService.create(dto);
   }
 

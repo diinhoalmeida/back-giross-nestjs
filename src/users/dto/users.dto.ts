@@ -4,7 +4,7 @@ export class UsersDto {
   id?: number;
   nome?: string;
 
-  @IsEmail()
+  @IsEmail(undefined, { message: 'O tipo digitado não é um e-mail.' })
   email?: string;
 
   idade?: number;
